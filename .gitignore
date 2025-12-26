@@ -1,0 +1,7 @@
+*.swp
+bazel-*
+compile_commands.json
+cmake-build-debug
+cmake-build-release
+.idea
+/build
