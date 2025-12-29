@@ -1,0 +1,2 @@
+add_executable(counter_test counter_test.cpp)
+target_link_libraries(counter_test mini_muduo_base)
