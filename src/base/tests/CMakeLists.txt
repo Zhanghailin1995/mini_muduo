@@ -1,2 +1,5 @@
 add_executable(counter_test counter_test.cpp)
 target_link_libraries(counter_test mini_muduo_base)
+
+add_executable(async_logging_test async_logging_test.cpp)
+target_link_libraries(async_logging_test mini_muduo_base)
