@@ -1,0 +1,18 @@
+set(net_SRCS
+  event_loop.cpp
+  epoller.cpp
+  )
+
+add_library(mini_muduo_net ${net_SRCS})
+target_link_libraries(mini_muduo_net mini_muduo_base)
+install(TARGETS mini_muduo_net DESTINATION lib)
+
+set(HEADERS
+  eventloop.h
+  )
+
+install(FILES ${HEADERS} DESTINATION include/mini_muduo/net)
+
+if (MUDUO_BUILD_EXAMPLES)
+  add_subdirectory(tests)
+endif ()

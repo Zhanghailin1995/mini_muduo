@@ -3,16 +3,13 @@
 
 #include <atomic>
 #include <condition_variable>
-#include <mutex>
-#include "blocking_queue.h"
-#include "bounded_blocking_queue.h"
-#include "count_down_latch.h"
-#include "log_stream.h"
-
 #include <functional>
-#include <memory>
+#include <mutex>
 #include <thread>
 #include <vector>
+#include "count_down_latch.h"
+#include "log_stream.h"
+#include "thread.h"
 
 namespace muduo {
 class AsyncLogging : NonCopyable {
@@ -28,17 +25,14 @@ class AsyncLogging : NonCopyable {
 
   void Start() {
     running_ = true;
-    // thread_ = std::thread(&AsyncLogging::ThreadFunc, this);
-    thread_ = std::thread([this] { this->ThreadFunc(); });
+    thread_.Start();
     latch_.Wait();
   }
 
   void Stop() {
     running_ = false;
     cond_.notify_all();
-    if (thread_.joinable()) {
-      thread_.join();
-    }
+    thread_.Join();
   }
 
  private:
@@ -52,7 +46,7 @@ class AsyncLogging : NonCopyable {
   std::atomic<bool> running_;
   const std::string basename_;
   const off_t roll_size_;
-  std::thread thread_;
+  muduo::Thread thread_;
   std::mutex mutex_;
   CountDownLatch latch_;
   std::condition_variable cond_;

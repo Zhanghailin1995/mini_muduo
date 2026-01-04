@@ -15,7 +15,7 @@ AsyncLogging::AsyncLogging(std::string basename, off_t roll_size, int flush_inte
       running_(false),
       basename_(std::move(basename)),
       roll_size_(roll_size),
-      // thread_([this] { ThreadFunc(); }, "Logging"),
+      thread_([this] { ThreadFunc(); }, "Logging"),
       latch_(1),
       current_buffer_(std::make_unique<Buffer>()),
       next_buffer_(std::make_unique<Buffer>()) {
@@ -25,7 +25,7 @@ AsyncLogging::AsyncLogging(std::string basename, off_t roll_size, int flush_inte
 }
 
 void AsyncLogging::Append(const char *logline, int len) {
-  std::unique_lock<std::mutex> lock(mutex_);
+  std::lock_guard<std::mutex> lock(mutex_);
   if (current_buffer_->Available() > len) {
     current_buffer_->Append(logline, static_cast<size_t>(len));
   } else {
@@ -62,8 +62,8 @@ void AsyncLogging::ThreadFunc() {
   latch_.CountDown();
   LogFile output(basename_, static_cast<size_t>(roll_size_), false);
   // Prepare two empty buffers.
-  BufferPtr new_buffer1 = std::make_unique<Buffer>();
-  BufferPtr new_buffer2 = std::make_unique<Buffer>();
+  BufferPtr new_buffer1(std::make_unique<Buffer>());
+  BufferPtr new_buffer2(std::make_unique<Buffer>());
   new_buffer1->Bzero();
   new_buffer2->Bzero();
   BufferVector buffers_to_write;

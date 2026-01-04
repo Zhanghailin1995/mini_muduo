@@ -2,11 +2,12 @@ set(base_SRCS
   async_logging.cpp
   current_thread.cpp
   condition.cpp
+  count_down_latch.cpp
   log_stream.cpp
   logging.cpp
   log_file.cpp
   mutex.h
-  count_down_latch.cpp
+  thread.cpp
   utils.cpp
   noncopyable.h
 )
