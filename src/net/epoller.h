@@ -2,21 +2,56 @@
 #define MUDUO_NET_EPOLLER_H
 
 #include <sys/epoll.h>
-#include <cstdint>
+#include <map>
 #include <vector>
 
 namespace muduo {
-class EPoller {
+inline const char* EpollOpToString(int op) {
+  switch (op) {
+    case EPOLL_CTL_ADD:
+      return "EPOLL_CTL_ADD";
+    case EPOLL_CTL_DEL:
+      return "EPOLL_CTL_DEL";
+    case EPOLL_CTL_MOD:
+      return "EPOLL_CTL_MOD";
+    default:
+      return "EPOLL_CTL_UNKNOWN";
+  }
+}
+}  // namespace muduo
+
+#include "src/net/event_loop.h"
+
+struct epoll_event;
+
+namespace muduo {
+
+class Channel;
+class EPoller : NonCopyable {
  public:
-  EPoller();
+  EPoller(EventLoop* loop);
   ~EPoller();
-  int64_t Poll(int timeout_ms);
+  int64_t Poll(int timeout_ms, std::vector<Channel*>* active_channels);
+
+  // changes the interested events
+  // must be called in the loop thread
+  void UpdateChannel(Channel* channel);
+  // remove the channel , when it destructs.
+  // must be called in the loop thread
+  // void RemoveChannel(Channel *channel);
+
+  void AssertInLoopThread() { owner_loop_->AssertInLoopThread(); }
 
  private:
-  //   static const int initial_event_list_size_ = 16;
-  //   typedef std::vector<struct epoll_event> EventList;
-  //   EventList events_;
+  static const int initial_event_list_size_ = 16;
+
+  void FillActiveChannels(int num_events, std::vector<Channel*>* active_channels) const;
+  void Update(int operation, Channel* channel);
+
   int epoll_fd_;
+  EventLoop* owner_loop_;
+  std::vector<struct epoll_event> events_;
+  std::map<int, Channel*> channel_map_;
 };
 }  // namespace muduo
 

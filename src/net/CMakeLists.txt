@@ -1,4 +1,5 @@
 set(net_SRCS
+  channel.cpp
   event_loop.cpp
   epoller.cpp
   )
@@ -8,7 +9,9 @@ target_link_libraries(mini_muduo_net mini_muduo_base)
 install(TARGETS mini_muduo_net DESTINATION lib)
 
 set(HEADERS
+  channel.h
   eventloop.h
+  epoller.h
   )
 
 install(FILES ${HEADERS} DESTINATION include/mini_muduo/net)

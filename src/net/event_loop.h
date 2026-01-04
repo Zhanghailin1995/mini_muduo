@@ -3,11 +3,13 @@
 
 #include <sys/types.h>
 #include <memory>
+#include <vector>
 #include "src/base/current_thread.h"
 #include "src/base/noncopyable.h"
 
 namespace muduo {
 
+class Channel;
 class EPoller;
 class EventLoop : NonCopyable {
  public:
@@ -15,6 +17,10 @@ class EventLoop : NonCopyable {
   ~EventLoop();
 
   void Loop();
+
+  void Quit();
+
+  void UpdateChannel(Channel* channel);
 
   void AssertInLoopThread() {
     if (!IsInLoopThread()) {
@@ -28,8 +34,10 @@ class EventLoop : NonCopyable {
  private:
   void AbortNotInLoopThread();
   bool looping_;
+  bool quit_;
   const pid_t thread_id_;
   std::unique_ptr<class EPoller> poller_;
+  std::vector<Channel*> active_channels_;
 };
 
 }  // namespace muduo
