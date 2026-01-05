@@ -1,5 +1,6 @@
 #include "async_logging.h"
 #include "log_file.h"
+#include "timestamp.h"
 #include "utils.h"
 
 #include <chrono>
@@ -24,7 +25,7 @@ AsyncLogging::AsyncLogging(std::string basename, off_t roll_size, int flush_inte
   buffers_.reserve(16);
 }
 
-void AsyncLogging::Append(const char *logline, int len) {
+void AsyncLogging::Append(const char* logline, int len) {
   std::lock_guard<std::mutex> lock(mutex_);
   if (current_buffer_->Available() > len) {
     current_buffer_->Append(logline, static_cast<size_t>(len));
@@ -42,17 +43,20 @@ void AsyncLogging::Append(const char *logline, int len) {
 
 string ToFormattedString(int64_t micro_seconds_since_epoch, bool show_microseconds) {
   char buf[64] = {0};
-  time_t seconds = static_cast<time_t>(micro_seconds_since_epoch / muduo::utils::K_MICRO_SECONDS_PER_SECOND);
+  time_t seconds =
+      static_cast<time_t>(micro_seconds_since_epoch / Timestamp::K_MICRO_SECONDS_PER_SECOND);
   struct tm tm_time{};
   gmtime_r(&seconds, &tm_time);
 
   if (show_microseconds) {
-    int microseconds = static_cast<int>(micro_seconds_since_epoch % muduo::utils::K_MICRO_SECONDS_PER_SECOND);
-    snprintf(buf, sizeof(buf), "%4d%02d%02d %02d:%02d:%02d.%06d", tm_time.tm_year + 1900, tm_time.tm_mon + 1,
-             tm_time.tm_mday, tm_time.tm_hour, tm_time.tm_min, tm_time.tm_sec, microseconds);
+    int microseconds =
+        static_cast<int>(micro_seconds_since_epoch % Timestamp::K_MICRO_SECONDS_PER_SECOND);
+    snprintf(buf, sizeof(buf), "%4d%02d%02d %02d:%02d:%02d.%06d", tm_time.tm_year + 1900,
+             tm_time.tm_mon + 1, tm_time.tm_mday, tm_time.tm_hour, tm_time.tm_min, tm_time.tm_sec,
+             microseconds);
   } else {
-    snprintf(buf, sizeof(buf), "%4d%02d%02d %02d:%02d:%02d", tm_time.tm_year + 1900, tm_time.tm_mon + 1,
-             tm_time.tm_mday, tm_time.tm_hour, tm_time.tm_min, tm_time.tm_sec);
+    snprintf(buf, sizeof(buf), "%4d%02d%02d %02d:%02d:%02d", tm_time.tm_year + 1900,
+             tm_time.tm_mon + 1, tm_time.tm_mday, tm_time.tm_hour, tm_time.tm_min, tm_time.tm_sec);
   }
   return buf;
 }
@@ -99,7 +103,7 @@ void AsyncLogging::ThreadFunc() {
       output.Append(buf, static_cast<int>(strlen(buf)));
       buffers_to_write.erase(buffers_to_write.begin() + 2, buffers_to_write.end());
     }
-    for (const auto &buffer : buffers_to_write) {
+    for (const auto& buffer : buffers_to_write) {
       output.Append(buffer->Data(), buffer->Length());
     }
     if (buffers_to_write.size() > 2) {

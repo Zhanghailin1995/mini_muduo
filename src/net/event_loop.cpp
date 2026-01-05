@@ -3,17 +3,19 @@
 #include "src/base/logging.h"
 #include "src/net/channel.h"
 #include "src/net/epoller.h"
+#include "src/net/timer_queue.h"
 
 using namespace muduo;  // NOLINT
 
 __thread EventLoop* t_loop_in_this_thread = nullptr;
-const int K_POLL_TIME_MS = 5 * 1000;
+const int K_POLL_TIME_MS = 10 * 1000;
 
 EventLoop::EventLoop()
     : looping_(false),
       quit_(false),
       thread_id_(current_thread::Tid()),
-      poller_(std::make_unique<EPoller>(this)) {
+      poller_(std::make_unique<EPoller>(this)),
+      timer_queue_(std::make_unique<TimerQueue>(this)) {
   LOG_TRACE << "EventLoop created " << this << " in thread " << thread_id_;
   if (t_loop_in_this_thread != nullptr) {
     LOG_FATAL << "Another EventLoop " << t_loop_in_this_thread << " exists in this thread "
@@ -37,7 +39,8 @@ void EventLoop::Loop() {
   LOG_TRACE << "EventLoop " << this << " start looping";
 
   while (!quit_) {
-    poller_->Poll(K_POLL_TIME_MS, &active_channels_);
+    active_channels_.clear();
+    poll_return_time_ = poller_->Poll(K_POLL_TIME_MS, &active_channels_);
     for (Channel* channel : active_channels_) {
       channel->HandleEvent();
     }
@@ -52,6 +55,20 @@ void EventLoop::Quit() {
   if (!IsInLoopThread()) {
     // wake up IO thread (omitted for brevity)
   }
+}
+
+TimerId EventLoop::Schedule(const TimerCallback& cb, Timestamp when) {
+  return timer_queue_->AddTimer(cb, when, 0.0);
+}
+
+TimerId EventLoop::ScheduleDelay(const TimerCallback& cb, double delay) {
+  Timestamp when = AddTime(Timestamp::Now(), delay);
+  return Schedule(cb, when);
+}
+
+TimerId EventLoop::ScheduleAtFixRate(const TimerCallback& cb, double interval) {
+  Timestamp when = AddTime(Timestamp::Now(), interval);
+  return timer_queue_->AddTimer(cb, when, interval);
 }
 
 void EventLoop::UpdateChannel(Channel* channel) {

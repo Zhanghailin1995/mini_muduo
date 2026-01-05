@@ -8,6 +8,7 @@ set(base_SRCS
   log_file.cpp
   mutex.h
   thread.cpp
+  timestamp.cpp
   utils.cpp
   noncopyable.h
 )

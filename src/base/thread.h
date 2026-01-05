@@ -1,5 +1,5 @@
-#ifndef TINY_MUDUO_THREAD_H
-#define TINY_MUDUO_THREAD_H
+#ifndef MINI_MUDUO_THREAD_H
+#define MINI_MUDUO_THREAD_H
 
 #include <sys/types.h>
 #include <atomic>
@@ -22,7 +22,7 @@ class Thread : NonCopyable {
 
   bool Started() const { return started_; }
   pid_t Tid() const { return tid_; }
-  const std::string &Name() const { return name_; }
+  const std::string& Name() const { return name_; }
 
   static int NumCreated() { return num_created.load(); }
 
@@ -42,4 +42,4 @@ class Thread : NonCopyable {
 
 }  // namespace muduo
 
-#endif  // TINY_MUDUO_THREAD_H
+#endif  // MINI_MUDUO_THREAD_H

@@ -6,11 +6,15 @@
 #include <vector>
 #include "src/base/current_thread.h"
 #include "src/base/noncopyable.h"
+#include "src/net/callbacks.h"
+#include "src/net/timer_id.h"
 
 namespace muduo {
 
 class Channel;
 class EPoller;
+class TimerQueue;
+
 class EventLoop : NonCopyable {
  public:
   EventLoop();
@@ -19,6 +23,12 @@ class EventLoop : NonCopyable {
   void Loop();
 
   void Quit();
+
+  TimerId Schedule(const TimerCallback& cb, Timestamp when);
+
+  TimerId ScheduleDelay(const TimerCallback& cb, double delay);
+
+  TimerId ScheduleAtFixRate(const TimerCallback& cb, double interval);
 
   void UpdateChannel(Channel* channel);
 
@@ -36,7 +46,9 @@ class EventLoop : NonCopyable {
   bool looping_;
   bool quit_;
   const pid_t thread_id_;
+  Timestamp poll_return_time_;
   std::unique_ptr<class EPoller> poller_;
+  std::unique_ptr<class TimerQueue> timer_queue_;
   std::vector<Channel*> active_channels_;
 };
 

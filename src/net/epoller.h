@@ -4,6 +4,8 @@
 #include <sys/epoll.h>
 #include <map>
 #include <vector>
+#include "src/base/timestamp.h"
+#include "src/net/event_loop.h"
 
 namespace muduo {
 inline const char* EpollOpToString(int op) {
@@ -20,8 +22,6 @@ inline const char* EpollOpToString(int op) {
 }
 }  // namespace muduo
 
-#include "src/net/event_loop.h"
-
 struct epoll_event;
 
 namespace muduo {
@@ -31,7 +31,7 @@ class EPoller : NonCopyable {
  public:
   EPoller(EventLoop* loop);
   ~EPoller();
-  int64_t Poll(int timeout_ms, std::vector<Channel*>* active_channels);
+  Timestamp Poll(int timeout_ms, std::vector<Channel*>* active_channels);
 
   // changes the interested events
   // must be called in the loop thread

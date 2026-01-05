@@ -26,12 +26,12 @@ EPoller::EPoller(EventLoop* loop)
 
 EPoller::~EPoller() { ::close(epoll_fd_); }
 
-int64_t EPoller::Poll(int timeout_ms, std::vector<Channel*>* active_channels) {
+Timestamp EPoller::Poll(int timeout_ms, std::vector<Channel*>* active_channels) {
   epoll_event* evts = &*events_.begin();
   int max_evts = static_cast<int>(events_.size());
 
   int num_events = ::epoll_wait(epoll_fd_, evts, max_evts, timeout_ms);
-  int64_t now = utils::MicroSecondsSinceEpoch();
+  Timestamp now(Timestamp::Now());
   if (num_events > 0) {
     LOG_TRACE << num_events << " events happened";
     FillActiveChannels(num_events, active_channels);
@@ -47,7 +47,7 @@ int64_t EPoller::Poll(int timeout_ms, std::vector<Channel*>* active_channels) {
 
   // Process events (omitted for brevity)
 
-  return now;
+  return Timestamp(now);
 }
 
 void EPoller::FillActiveChannels(int num_events, std::vector<Channel*>* active_channels) const {

@@ -6,3 +6,6 @@ target_link_libraries(test02 mini_muduo_net)
 
 add_executable(test03 test03.cpp)
 target_link_libraries(test03 mini_muduo_net)
+
+add_executable(test04 test04.cpp)
+target_link_libraries(test04 mini_muduo_net)

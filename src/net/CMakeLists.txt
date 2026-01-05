@@ -2,6 +2,8 @@ set(net_SRCS
   channel.cpp
   event_loop.cpp
   epoller.cpp
+  timer_queue.cpp
+  timer.cpp
   )
 
 add_library(mini_muduo_net ${net_SRCS})
