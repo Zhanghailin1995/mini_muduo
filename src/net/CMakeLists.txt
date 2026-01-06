@@ -1,6 +1,7 @@
 set(net_SRCS
   channel.cpp
   event_loop.cpp
+  event_loop_thread.cpp
   epoller.cpp
   timer_queue.cpp
   timer.cpp

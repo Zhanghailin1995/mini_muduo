@@ -75,14 +75,18 @@ TimerQueue::~TimerQueue() {
   }
 }
 
-TimerId TimerQueue::AddTimer(const TimerCallback& cb, Timestamp when, double interval) {
-  Timer* timer = new Timer(cb, when, interval);
+TimerId TimerQueue::AddTimer(TimerCallback cb, Timestamp when, double interval) {
+  Timer* timer = new Timer(std::move(cb), when, interval);
+  loop_->Execute(std::bind(&TimerQueue::AddTimerInEventExecutor, this, timer));
+  return TimerId(timer);
+}
+
+void TimerQueue::AddTimerInEventExecutor(Timer* timer) {
   loop_->AssertInLoopThread();
   bool earliest_changed = Insert(timer);
   if (earliest_changed) {
     ResetTimerFd(timer_fd_, timer->Expiration());
   }
-  return TimerId(timer);
 }
 
 void TimerQueue::HandleTimeout() {

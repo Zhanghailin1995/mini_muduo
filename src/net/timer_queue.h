@@ -19,11 +19,13 @@ class TimerQueue : NonCopyable {
   explicit TimerQueue(EventLoop* loop);
   ~TimerQueue();
 
-  TimerId AddTimer(const TimerCallback& cb, Timestamp when, double interval);
+  TimerId AddTimer(TimerCallback cb, Timestamp when, double interval);
 
  private:
   using Entry = std::pair<Timestamp, Timer*>;
   using TimerSet = std::set<Entry>;
+
+  void AddTimerInEventExecutor(Timer* timer);
 
   void HandleTimeout();
   std::vector<Entry> GetExpired(Timestamp now);

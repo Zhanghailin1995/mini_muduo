@@ -3,6 +3,7 @@
 
 #include <sys/types.h>
 #include <memory>
+#include <mutex>
 #include <vector>
 #include "src/base/current_thread.h"
 #include "src/base/noncopyable.h"
@@ -17,6 +18,7 @@ class TimerQueue;
 
 class EventLoop : NonCopyable {
  public:
+  using Functor = std::function<void()>;
   EventLoop();
   ~EventLoop();
 
@@ -24,11 +26,29 @@ class EventLoop : NonCopyable {
 
   void Quit();
 
-  TimerId Schedule(const TimerCallback& cb, Timestamp when);
+  Timestamp PollReturnTime() const { return poll_return_time_; }
 
-  TimerId ScheduleDelay(const TimerCallback& cb, double delay);
+  // Runs callback immediately if in loop thread,
+  // or queues callback in loop thread.
+  // safe to call from other threads.
+  void Execute(Functor cb);
 
-  TimerId ScheduleAtFixRate(const TimerCallback& cb, double interval);
+  // Queues callback in loop thread.
+  // safe to call from other threads.
+  // the difference between Submit() and Execute() is that
+  // Submit() always queues the callback.
+  // User should prefer Execute(), unless they know what they are doing.
+  void Submit(Functor cb);
+
+  void WakeupExecutor();
+
+  void RunPendingFunctors();
+
+  TimerId Schedule(TimerCallback cb, Timestamp when);
+
+  TimerId ScheduleDelay(TimerCallback cb, double delay);
+
+  TimerId ScheduleAtFixRate(TimerCallback cb, double interval);
 
   void UpdateChannel(Channel* channel);
 
@@ -45,11 +65,16 @@ class EventLoop : NonCopyable {
   void AbortNotInLoopThread();
   bool looping_;
   bool quit_;
+  bool running_pending_functors_;
   const pid_t thread_id_;
   Timestamp poll_return_time_;
   std::unique_ptr<class EPoller> poller_;
   std::unique_ptr<class TimerQueue> timer_queue_;
   std::vector<Channel*> active_channels_;
+  int wakeup_fd_;
+  std::unique_ptr<class Channel> wakeup_channel_;
+  std::mutex mutex_;
+  std::vector<Functor> pending_functors_;
 };
 
 }  // namespace muduo
