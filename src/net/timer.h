@@ -2,8 +2,8 @@
 // Created by hailin on 11/14/22.
 //
 
-#ifndef TINY_MUDUO_TIMER_H
-#define TINY_MUDUO_TIMER_H
+#ifndef MUDUO_NET_TIMER_H
+#define MUDUO_NET_TIMER_H
 
 #include <utility>
 
@@ -32,4 +32,4 @@ class Timer : NonCopyable {
 };
 }  // namespace muduo
 
-#endif  // TINY_MUDUO_TIMER_H
+#endif  // MUDUO_NET_TIMER_H
