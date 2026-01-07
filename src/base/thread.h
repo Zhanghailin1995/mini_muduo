@@ -1,5 +1,5 @@
-#ifndef MINI_MUDUO_THREAD_H
-#define MINI_MUDUO_THREAD_H
+#ifndef MUDUO_BASE_THREAD_H
+#define MUDUO_BASE_THREAD_H
 
 #include <sys/types.h>
 #include <atomic>
@@ -42,4 +42,4 @@ class Thread : NonCopyable {
 
 }  // namespace muduo
 
-#endif  // MINI_MUDUO_THREAD_H
+#endif  // MUDUO_BASE_THREAD_H

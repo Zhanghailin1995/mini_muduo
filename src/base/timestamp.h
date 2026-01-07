@@ -2,8 +2,8 @@
 // Created by hailin on 11/29/22.
 //
 
-#ifndef MINI_MUDUO_TIMESTAMP_H
-#define MINI_MUDUO_TIMESTAMP_H
+#ifndef MUDUO_BASE_TIMESTAMP_H
+#define MUDUO_BASE_TIMESTAMP_H
 
 #include <cstdint>
 #include <string>
@@ -58,4 +58,4 @@ inline Timestamp AddTime(Timestamp timestamp, double seconds) {
 
 }  // namespace muduo
 
-#endif  // MINI_MUDUO_TIMESTAMP_H
+#endif  // MUDUO_BASE_TIMESTAMP_H

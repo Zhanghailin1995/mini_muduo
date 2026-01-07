@@ -2,8 +2,8 @@
 // Created by hailin on 11/14/22.
 //
 
-#ifndef MINI_MUDUO_TIMER_ID_H
-#define MINI_MUDUO_TIMER_ID_H
+#ifndef MUDUO_NET_TIMER_ID_H
+#define MUDUO_NET_TIMER_ID_H
 
 namespace muduo {
 class Timer;
@@ -21,4 +21,4 @@ class TimerId {
 };
 }  // namespace muduo
 
-#endif  // TINY_MUDUO_TIMER_ID_H
+#endif  // MUDUO_NET_TIMER_ID_H

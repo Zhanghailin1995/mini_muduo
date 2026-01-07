@@ -12,13 +12,13 @@ using namespace muduo;  // NOLINT
 
 class LogFile::File : NonCopyable {
  public:
-  explicit File(const string &filename) : fp_(::fopen(filename.c_str(), "ae")), written_bytes_(0) {
+  explicit File(const string& filename) : fp_(::fopen(filename.c_str(), "ae")), written_bytes_(0) {
     ::setbuffer(fp_, buffer_, sizeof buffer_);
   }
 
   ~File() { ::fclose(fp_); }
 
-  void Append(const char *logline, const size_t len) {
+  void Append(const char* logline, const size_t len) {
     size_t n = Write(logline, len);
     size_t remain = len - n;
     while (remain > 0) {
@@ -47,9 +47,9 @@ class LogFile::File : NonCopyable {
   size_t WrittenBytes() const { return written_bytes_; }
 
  private:
-  size_t Write(const char *logline, size_t len) { return fwrite_unlocked(logline, 1, len, fp_); }
+  size_t Write(const char* logline, size_t len) { return fwrite_unlocked(logline, 1, len, fp_); }
 
-  FILE *fp_;
+  FILE* fp_;
   char buffer_[64 * 1024];
   size_t written_bytes_;
 };
@@ -70,7 +70,7 @@ LogFile::LogFile(string basename, size_t roll_size, bool thread_safe, int flush_
 
 LogFile::~LogFile() = default;
 
-void LogFile::Append(const char *logline, int len) {
+void LogFile::Append(const char* logline, int len) {
   if (mutex_) {
     std::lock_guard<std::mutex> lock(*mutex_);
     AppendUnlocked(logline, len);
@@ -88,7 +88,7 @@ void LogFile::Flush() {
   }
 }
 
-void LogFile::AppendUnlocked(const char *logline, int len) {
+void LogFile::AppendUnlocked(const char* logline, int len) {
   file_->Append(logline, static_cast<size_t>(len));
   if (file_->WrittenBytes() > roll_size_) {
     RollFile();
@@ -119,11 +119,11 @@ void LogFile::RollFile() {
     last_roll_ = now;
     last_flush_ = now;
     start_of_period_ = start;
-    file_ = std::make_unique<File>(filename);
+    file_ = std::unique_ptr<File>(new File(filename));
   }
 }
 
-string LogFile::GetLogFileName(const string &basename, time_t *now) {
+string LogFile::GetLogFileName(const string& basename, time_t* now) {
   string filename;
   filename.reserve(basename.size() + 32);
   filename = basename;

@@ -2,8 +2,8 @@
 // Created by hailin on 11/14/22.
 //
 
-#ifndef MINI_MUDUO_UTILS_H
-#define MINI_MUDUO_UTILS_H
+#ifndef MUDUO_BASE_UTILS_H
+#define MUDUO_BASE_UTILS_H
 
 #include <cstdint>
 #include <string>
@@ -16,4 +16,4 @@ inline To implicit_cast(From const& f) {  // NOLINT
 }  // namespace utils
 }  // namespace muduo
 
-#endif  // MINI_MUDUO_UTILS_H
+#endif  // MUDUO_BASE_UTILS_H

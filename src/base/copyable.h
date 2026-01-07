@@ -2,8 +2,8 @@
 // Created by hailin on 11/17/22.
 //
 
-#ifndef MINI_MUDUO_COPYABLE_H
-#define MINI_MUDUO_COPYABLE_H
+#ifndef MUDUO_BASE_COPYABLE_H
+#define MUDUO_BASE_COPYABLE_H
 
 namespace muduo {
 
@@ -18,4 +18,4 @@ class Copyable {
 
 }  // namespace muduo
 
-#endif  // MINI_MUDUO_COPYABLE_H
+#endif  // MUDUO_BASE_COPYABLE_H

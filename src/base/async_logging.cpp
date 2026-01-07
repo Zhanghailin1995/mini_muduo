@@ -18,8 +18,8 @@ AsyncLogging::AsyncLogging(std::string basename, off_t roll_size, int flush_inte
       roll_size_(roll_size),
       thread_([this] { ThreadFunc(); }, "Logging"),
       latch_(1),
-      current_buffer_(std::make_unique<Buffer>()),
-      next_buffer_(std::make_unique<Buffer>()) {
+      current_buffer_(BufferPtr(new Buffer())),
+      next_buffer_(BufferPtr(new Buffer())) {
   current_buffer_->Bzero();
   next_buffer_->Bzero();
   buffers_.reserve(16);
@@ -34,7 +34,7 @@ void AsyncLogging::Append(const char* logline, int len) {
     if (next_buffer_) {
       current_buffer_ = std::move(next_buffer_);
     } else {
-      current_buffer_ = std::make_unique<Buffer>();
+      current_buffer_ = BufferPtr(new Buffer());
     }
     current_buffer_->Append(logline, static_cast<size_t>(len));
     cond_.notify_one();
@@ -66,8 +66,8 @@ void AsyncLogging::ThreadFunc() {
   latch_.CountDown();
   LogFile output(basename_, static_cast<size_t>(roll_size_), false);
   // Prepare two empty buffers.
-  BufferPtr new_buffer1(std::make_unique<Buffer>());
-  BufferPtr new_buffer2(std::make_unique<Buffer>());
+  BufferPtr new_buffer1(new Buffer());
+  BufferPtr new_buffer2(new Buffer());
   new_buffer1->Bzero();
   new_buffer2->Bzero();
   BufferVector buffers_to_write;

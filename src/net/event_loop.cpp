@@ -25,10 +25,10 @@ EventLoop::EventLoop()
       quit_(false),
       running_pending_functors_(false),
       thread_id_(current_thread::Tid()),
-      poller_(std::make_unique<EPoller>(this)),
-      timer_queue_(std::make_unique<TimerQueue>(this)),
+      poller_(std::unique_ptr<EPoller>(new EPoller(this))),
+      timer_queue_(std::unique_ptr<TimerQueue>(new TimerQueue(this))),
       wakeup_fd_(CreateEventfd()),
-      wakeup_channel_(std::make_unique<Channel>(this, wakeup_fd_)) {
+      wakeup_channel_(std::unique_ptr<Channel>(new Channel(this, wakeup_fd_))) {
   LOG_TRACE << "EventLoop created " << this << " in thread " << thread_id_;
   if (t_loop_in_this_thread != nullptr) {
     LOG_FATAL << "Another EventLoop " << t_loop_in_this_thread << " exists in this thread "
