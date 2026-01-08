@@ -12,11 +12,13 @@ class Channel : NonCopyable {
   typedef std::function<void()> EventCallback;
 
   Channel(EventLoop* loop, int fd);
+  ~Channel();
 
   void HandleEvent();
   void SetReadCallback(const EventCallback& cb) { read_callback_ = cb; }
   void SetWriteCallback(const EventCallback& cb) { write_callback_ = cb; }
   void SetErrorCallback(const EventCallback& cb) { error_callback_ = cb; }
+  void SetCloseCallback(const EventCallback& cb) { close_callback_ = cb; }
 
   int Fd() const { return fd_; }
   int Events() const { return events_; }
@@ -24,6 +26,11 @@ class Channel : NonCopyable {
   bool IsNoneEvent() const { return events_ == K_NONE_EVENT; }
   void EnableReading() {
     events_ |= K_READ_EVENT;
+    Update();
+  }
+
+  void DisableAll() {
+    events_ = K_NONE_EVENT;
     Update();
   }
 
@@ -44,9 +51,13 @@ class Channel : NonCopyable {
   int events_;
   int revents_;
   int index_;
+
+  bool event_handling_;
+
   EventCallback read_callback_;
   EventCallback write_callback_;
   EventCallback error_callback_;
+  EventCallback close_callback_;
 };
 }  // namespace muduo
 

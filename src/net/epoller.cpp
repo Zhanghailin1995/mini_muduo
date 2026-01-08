@@ -96,6 +96,27 @@ void EPoller::UpdateChannel(Channel* channel) {
   }
 }
 
+void EPoller::RemoveChannel(Channel* channel) {
+  AssertInLoopThread();
+  int fd = channel->Fd();
+  LOG_TRACE << "EPoller::RemoveChannel fd=" << fd;
+
+  assert(channel_map_.find(fd) != channel_map_.end());
+  assert(channel_map_[fd] == channel);
+  assert(channel->IsNoneEvent());
+
+  int index = channel->Index();
+  assert(index == ADDED || index == DELETED);
+  size_t n = channel_map_.erase(fd);
+  (void)n;
+  assert(n == 1);
+
+  if (index == ADDED) {
+    Update(EPOLL_CTL_DEL, channel);
+  }
+  channel->SetIndex(NEW);
+}
+
 void EPoller::Update(int operation, Channel* channel) {
   epoll_event event;
   bzero(&event, sizeof event);

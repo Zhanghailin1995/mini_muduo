@@ -38,7 +38,7 @@ class EPoller : NonCopyable {
   void UpdateChannel(Channel* channel);
   // remove the channel , when it destructs.
   // must be called in the loop thread
-  // void RemoveChannel(Channel *channel);
+  void RemoveChannel(Channel* channel);
 
   void AssertInLoopThread() { owner_loop_->AssertInLoopThread(); }
 

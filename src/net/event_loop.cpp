@@ -152,6 +152,13 @@ void EventLoop::UpdateChannel(Channel* channel) {
   poller_->UpdateChannel(channel);
 }
 
+void EventLoop::RemoveChannel(Channel* channel) {
+  assert(channel->OwnerLoop() == this);
+  AssertInLoopThread();
+  // Implementation of RemoveChannel can be added here if needed.
+  poller_->RemoveChannel(channel);
+}
+
 void EventLoop::AbortNotInLoopThread() {
   LOG_FATAL << "EventLoop::AbortNotInLoopThread - EventLoop " << this
             << " was created in thread_id_ = " << thread_id_

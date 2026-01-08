@@ -52,6 +52,8 @@ class EventLoop : NonCopyable {
 
   void UpdateChannel(Channel* channel);
 
+  void RemoveChannel(Channel* channel);
+
   void AssertInLoopThread() {
     if (!IsInLoopThread()) {
       // abort
