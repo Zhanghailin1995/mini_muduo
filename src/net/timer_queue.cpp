@@ -64,7 +64,8 @@ using namespace muduo::detail;
 
 TimerQueue::TimerQueue(EventLoop* loop)
     : loop_(loop), timer_fd_(CreateTimerfd()), timer_fd_channel_(loop, timer_fd_), timers_() {
-  timer_fd_channel_.SetReadCallback(std::bind(&TimerQueue::HandleTimeout, this));
+  timer_fd_channel_.SetReadCallback(
+      std::bind(&TimerQueue::HandleTimeout, this, std::placeholders::_1));
   timer_fd_channel_.EnableReading();
 }
 
@@ -89,9 +90,9 @@ void TimerQueue::AddTimerInEventExecutor(Timer* timer) {
   }
 }
 
-void TimerQueue::HandleTimeout() {
+void TimerQueue::HandleTimeout(Timestamp receive_time) {
   loop_->AssertInLoopThread();
-  Timestamp now(Timestamp::Now());
+  Timestamp now(receive_time);
   ReadTimerFd(timer_fd_, now);
 
   std::vector<Entry> expired = GetExpired(now);

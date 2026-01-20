@@ -2,6 +2,7 @@
 #define MUDUO_NET_TCP_CONNECTION_H
 
 #include "src/base/noncopyable.h"
+#include "src/net/buffer.h"
 #include "src/net/callbacks.h"
 #include "src/net/inet_address.h"
 
@@ -40,7 +41,7 @@ class TcpConnection : NonCopyable, public std::enable_shared_from_this<TcpConnec
     K_DISCONNECTED,
   };
   void SetState(State s) { state_ = s; }
-  void HandleRead();
+  void HandleRead(Timestamp receive_time);
   void HandleWrite();
   void HandleClose();
   void HandleError();
@@ -51,6 +52,7 @@ class TcpConnection : NonCopyable, public std::enable_shared_from_this<TcpConnec
   std::unique_ptr<Channel> channel_;
   const InetAddress local_addr_;
   const InetAddress peer_addr_;
+  Buffer input_buffer_;
   ConnectionCallback connection_callback_;
   MessageCallback message_callback_;
   CloseCallback close_callback_;

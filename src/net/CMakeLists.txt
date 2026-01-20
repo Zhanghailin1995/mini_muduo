@@ -1,5 +1,6 @@
 set(net_SRCS
   acceptor.cpp
+  buffer.cpp
   channel.cpp
   event_loop.cpp
   event_loop_thread.cpp
@@ -19,6 +20,7 @@ install(TARGETS mini_muduo_net DESTINATION lib)
 
 set(HEADERS
   acceptor.h
+  buffer.h
   channel.h
   event_loop.h
   event_loop_thread.h

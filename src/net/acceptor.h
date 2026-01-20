@@ -23,7 +23,7 @@ class Acceptor : NonCopyable {
   void SetNewConnectionCallback(const NewConnectionCallback& cb) { new_connection_callback_ = cb; }
 
  private:
-  void HandleRead();
+  void HandleRead(Timestamp receive_time);
 
   EventLoop* loop_;
   Socket accept_socket_;

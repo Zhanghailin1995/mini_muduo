@@ -2,6 +2,8 @@
 // Created by hailin on 11/19/22.
 //
 #include "src/base/logging.h"
+#include "src/base/timestamp.h"
+#include "src/net/buffer.h"
 #include "src/net/event_loop.h"
 #include "src/net/tcp_server.h"
 
@@ -14,10 +16,11 @@ void OnConnection(const muduo::TcpConnectionPtr& conn) {
   }
 }
 
-void OnMessage(const muduo::TcpConnectionPtr& conn, const char* buf, ssize_t len) {
-  LOG_INFO << conn->Name() << " OnMessage(): " << len << " bytes received from connection "
-           << conn->Name();
-  LOG_INFO << conn->Name() << " OnMessage(): " << std::string(buf, len);
+void OnMessage(const muduo::TcpConnectionPtr& conn, muduo::Buffer* buf,
+               muduo::Timestamp receive_time) {
+  LOG_INFO << conn->Name() << " OnMessage(): " << buf->ReadableBytes() << " bytes received at "
+           << receive_time.ToFormattedString();
+  LOG_INFO << conn->Name() << " OnMessage(): " << buf->ReadAsString();
 }
 
 int main() {

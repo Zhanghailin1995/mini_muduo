@@ -20,7 +20,7 @@ TcpConnection::TcpConnection(EventLoop* loop, const std::string& name, int sockf
       local_addr_(local_addr),
       peer_addr_(peer_addr) {
   LOG_DEBUG << "TcpConnection::TcpConnection [" << name_ << "] at " << this << " fd=" << sockfd;
-  channel_->SetReadCallback(std::bind(&TcpConnection::HandleRead, this));
+  channel_->SetReadCallback(std::bind(&TcpConnection::HandleRead, this, std::placeholders::_1));
   channel_->SetWriteCallback(std::bind(&TcpConnection::HandleWrite, this));
   channel_->SetErrorCallback(std::bind(&TcpConnection::HandleError, this));
   channel_->SetCloseCallback(std::bind(&TcpConnection::HandleClose, this));
@@ -52,17 +52,17 @@ void TcpConnection::ConnectionDestroyed() {
   channel_->OwnerLoop()->RemoveChannel(channel_.get());
 }
 
-void TcpConnection::HandleRead() {
-  char buf[65536];
-  ssize_t n = ::read(channel_->Fd(), buf, sizeof(buf));
+void TcpConnection::HandleRead(Timestamp receive_time) {
+  int saved_errno = 0;
+  ssize_t n = input_buffer_.ReadFd(channel_->Fd(), &saved_errno);
   if (n > 0) {
     if (message_callback_) {
-      message_callback_(shared_from_this(), buf, n);
+      message_callback_(shared_from_this(), &input_buffer_, receive_time);
     }
   } else if (n == 0) {
-    // todo close connection
     HandleClose();
   } else {
+    errno = saved_errno;
     HandleError();
   }
 }

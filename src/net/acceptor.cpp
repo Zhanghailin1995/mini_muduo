@@ -7,6 +7,7 @@
 #include <errno.h>
 #include <fcntl.h>
 #include <unistd.h>
+#include <functional>
 
 using namespace muduo;  // NOLINT
 
@@ -17,7 +18,7 @@ Acceptor::Acceptor(EventLoop* loop, const InetAddress& listen_addr)
       listening_(false) {
   accept_socket_.SetReuseAddr(true);
   accept_socket_.BindAddress(listen_addr);
-  accept_channel_.SetReadCallback(std::bind(&Acceptor::HandleRead, this));
+  accept_channel_.SetReadCallback(std::bind(&Acceptor::HandleRead, this, std::placeholders::_1));
 }
 
 void Acceptor::Listen() {
@@ -28,7 +29,7 @@ void Acceptor::Listen() {
   accept_channel_.EnableReading();
 }
 
-void Acceptor::HandleRead() {
+void Acceptor::HandleRead(Timestamp /*receive_time*/) {
   loop_->AssertInLoopThread();
   InetAddress peer_addr(0);
   int connfd = accept_socket_.Accept(&peer_addr);

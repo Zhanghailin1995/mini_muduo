@@ -27,7 +27,7 @@ class TimerQueue : NonCopyable {
 
   void AddTimerInEventExecutor(Timer* timer);
 
-  void HandleTimeout();
+  void HandleTimeout(Timestamp receive_time);
   std::vector<Entry> GetExpired(Timestamp now);
   void Reset(const std::vector<Entry>& expired, Timestamp now);
 

@@ -14,7 +14,7 @@ using namespace muduo;  // NOLINT
 
 muduo::EventLoop* g_loop;
 
-void Timeout() {
+void Timeout(muduo::Timestamp /*receive_time*/) {
   printf("Timeout!\n");
   g_loop->Quit();
 }

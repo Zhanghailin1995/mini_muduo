@@ -4,13 +4,15 @@
 #include <functional>
 #include <memory>
 #include "src/base/timestamp.h"
+#include "src/net/buffer.h"
 
 namespace muduo {
 class TcpConnection;
 typedef std::function<void()> TimerCallback;
 typedef std::shared_ptr<class TcpConnection> TcpConnectionPtr;
 typedef std::function<void(const TcpConnectionPtr&)> ConnectionCallback;
-typedef std::function<void(const TcpConnectionPtr&, const char* data, ssize_t len)> MessageCallback;
+typedef std::function<void(const TcpConnectionPtr&, Buffer* buf, Timestamp receive_time)>
+    MessageCallback;
 typedef std::function<void(const TcpConnectionPtr&)> CloseCallback;
 }  // namespace muduo
 

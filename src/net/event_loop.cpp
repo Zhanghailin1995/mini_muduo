@@ -36,7 +36,7 @@ EventLoop::EventLoop()
   } else {
     t_loop_in_this_thread = this;
   }
-  wakeup_channel_->SetReadCallback([this]() {
+  wakeup_channel_->SetReadCallback([this](Timestamp /*receive_time*/) {
     uint64_t one = 1;
     ssize_t n = ::read(wakeup_fd_, &one, sizeof one);
     if (n != sizeof one) {
@@ -64,7 +64,7 @@ void EventLoop::Loop() {
     active_channels_.clear();
     poll_return_time_ = poller_->Poll(K_POLL_TIME_MS, &active_channels_);
     for (Channel* channel : active_channels_) {
-      channel->HandleEvent();
+      channel->HandleEvent(poll_return_time_);
     }
     RunPendingFunctors();
   }
