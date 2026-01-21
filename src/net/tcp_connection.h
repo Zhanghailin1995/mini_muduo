@@ -23,6 +23,10 @@ class TcpConnection : NonCopyable, public std::enable_shared_from_this<TcpConnec
   const InetAddress& PeerAddress() const { return peer_addr_; }
   bool IsConnected() const { return state_ == K_CONNECTED; }
 
+  void Write(const std::string& message);
+
+  void Shutdown();
+
   void SetConnectionCallback(const ConnectionCallback& cb) { connection_callback_ = cb; }
 
   void SetMessageCallback(const MessageCallback& cb) { message_callback_ = cb; }
@@ -38,6 +42,7 @@ class TcpConnection : NonCopyable, public std::enable_shared_from_this<TcpConnec
   enum State {
     K_CONNECTING,
     K_CONNECTED,
+    K_DISCONNECTING,
     K_DISCONNECTED,
   };
   void SetState(State s) { state_ = s; }
@@ -45,6 +50,9 @@ class TcpConnection : NonCopyable, public std::enable_shared_from_this<TcpConnec
   void HandleWrite();
   void HandleClose();
   void HandleError();
+  void WriteInEventExecutor(const std::string message);
+  void ShutdownInEventExecutor();
+
   EventLoop* loop_;
   const std::string name_;
   State state_;
@@ -53,6 +61,7 @@ class TcpConnection : NonCopyable, public std::enable_shared_from_this<TcpConnec
   const InetAddress local_addr_;
   const InetAddress peer_addr_;
   Buffer input_buffer_;
+  Buffer output_buffer_;
   ConnectionCallback connection_callback_;
   MessageCallback message_callback_;
   CloseCallback close_callback_;

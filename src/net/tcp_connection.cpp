@@ -1,5 +1,6 @@
 #include "src/net/tcp_connection.h"
 #include "src/base/logging.h"
+#include "src/base/utils.h"
 #include "src/net/channel.h"
 #include "src/net/event_loop.h"
 #include "src/net/socket.h"
@@ -8,7 +9,8 @@
 #include <cerrno>
 #include <cstdio>
 
-using namespace muduo;  // NOLINT
+using namespace muduo;         // NOLINT
+using namespace muduo::utils;  // NOLINT
 
 TcpConnection::TcpConnection(EventLoop* loop, const std::string& name, int sockfd,
                              const InetAddress& local_addr, const InetAddress& peer_addr)
@@ -31,6 +33,61 @@ TcpConnection::~TcpConnection() {
             << " fd=" << channel_->Fd();
 }
 
+void TcpConnection::Write(const std::string& message) {
+  if (loop_->IsInLoopThread()) {
+    WriteInEventExecutor(std::string(message));
+  } else {
+    loop_->Execute(std::bind(&TcpConnection::WriteInEventExecutor, this, std::string(message)));
+  }
+}
+
+void TcpConnection::WriteInEventExecutor(const std::string message) {
+  loop_->AssertInLoopThread();
+  if (state_ == K_DISCONNECTED) {
+    LOG_WARN << "TcpConnection::WriteInEventExecutor() - disconnected, give up writing";
+    return;
+  }
+  ssize_t nwrote = 0;
+  // if no data in output buffer, try writing directly
+  if (!channel_->IsInterestedWriting() && output_buffer_.ReadableBytes() == 0) {
+    nwrote = ::write(channel_->Fd(), message.data(), message.size());
+    if (nwrote >= 0) {
+      if (implicit_cast<size_t>(nwrote) < message.size()) {
+        LOG_TRACE << "TcpConnection::WriteInEventExecutor() - partial write" << nwrote
+                  << " bytes written out of " << message.size();
+      }
+    } else {
+      nwrote = 0;
+      if (errno != EWOULDBLOCK) {
+        LOG_SYSERR << "TcpConnection::WriteInEventExecutor()";
+      }
+    }
+  }
+
+  assert(nwrote >= 0);
+  if (implicit_cast<size_t>(nwrote) < message.size()) {
+    // append remaining data to output buffer
+    output_buffer_.Append(message.data() + nwrote, message.size() - nwrote);
+    if (!channel_->IsInterestedWriting()) {
+      channel_->EnableWriting();
+    }
+  }
+}
+
+void TcpConnection::Shutdown() {
+  if (state_ == K_CONNECTED) {
+    SetState(K_DISCONNECTING);
+    loop_->Execute(std::bind(&TcpConnection::ShutdownInEventExecutor, this));
+  }
+}
+
+void TcpConnection::ShutdownInEventExecutor() {
+  loop_->AssertInLoopThread();
+  if (!channel_->IsInterestedWriting()) {
+    socket_->ShutdownWrite();
+  }
+}
+
 void TcpConnection::ConnectionEstablished() {
   loop_->AssertInLoopThread();
   SetState(K_CONNECTED);
@@ -43,7 +100,7 @@ void TcpConnection::ConnectionEstablished() {
 
 void TcpConnection::ConnectionDestroyed() {
   loop_->AssertInLoopThread();
-  assert(state_ == K_CONNECTED);
+  assert(state_ == K_CONNECTED || state_ == K_DISCONNECTING);
   SetState(K_DISCONNECTED);
   channel_->DisableAll();
   if (connection_callback_) {
@@ -69,12 +126,28 @@ void TcpConnection::HandleRead(Timestamp receive_time) {
 
 void TcpConnection::HandleWrite() {
   // TODO
+  loop_->AssertInLoopThread();
+  if (channel_->IsInterestedWriting()) {
+    ssize_t n = ::write(channel_->Fd(), output_buffer_.Peek(),
+                        static_cast<size_t>(output_buffer_.ReadableBytes()));
+    if (n > 0) {
+      output_buffer_.AdvanceReadIndex(static_cast<size_t>(n));
+      if (output_buffer_.ReadableBytes() == 0) {
+        // all data sent
+        channel_->DisableWriting();
+      }
+    } else {
+      LOG_SYSERR << "TcpConnection::HandleWrite()";
+    }
+  } else {
+    LOG_TRACE << "TcpConnection::HandleWrite() - not interested in writing";
+  }
 }
 
 void TcpConnection::HandleClose() {
   LOG_DEBUG << "TcpConnection::HandleClose() fd=" << channel_->Fd();
   loop_->AssertInLoopThread();
-  assert(state_ == K_CONNECTED);
+  assert(state_ == K_CONNECTED || state_ == K_DISCONNECTING);
   channel_->DisableAll();
 
   if (close_callback_) {

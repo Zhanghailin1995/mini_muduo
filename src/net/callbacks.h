@@ -4,9 +4,9 @@
 #include <functional>
 #include <memory>
 #include "src/base/timestamp.h"
-#include "src/net/buffer.h"
 
 namespace muduo {
+class Buffer;
 class TcpConnection;
 typedef std::function<void()> TimerCallback;
 typedef std::shared_ptr<class TcpConnection> TcpConnectionPtr;

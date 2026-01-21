@@ -26,8 +26,19 @@ class Channel : NonCopyable {
   int Events() const { return events_; }
   void SetRevents(int revt) { revents_ = revt; }
   bool IsNoneEvent() const { return events_ == K_NONE_EVENT; }
+
   void EnableReading() {
     events_ |= K_READ_EVENT;
+    Update();
+  }
+
+  void EnableWriting() {
+    events_ |= K_WRITE_EVENT;
+    Update();
+  }
+
+  void DisableWriting() {
+    events_ &= ~K_WRITE_EVENT;
     Update();
   }
 
@@ -35,6 +46,8 @@ class Channel : NonCopyable {
     events_ = K_NONE_EVENT;
     Update();
   }
+
+  bool IsInterestedWriting() { return events_ & K_WRITE_EVENT; }
 
   int Index() { return index_; }
 

@@ -98,6 +98,8 @@ class Buffer : public Copyable {
     write_index_ += len;
   }
 
+  void DiscardAll() { Clear(); }
+
   void Prepend(const void* data, size_t len) {
     assert(len <= PrependableBytes());
     read_index_ -= len;

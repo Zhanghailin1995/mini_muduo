@@ -32,6 +32,8 @@ int Accept(int sockfd, struct sockaddr_in* addr);
 
 void Close(int sockfd);
 
+void ShutdownWrite(int sockfd);
+
 void ToHostPort(char* buf, size_t size, const struct sockaddr_in& addr);
 
 void FromHostPort(const char* ip, uint16_t port, struct sockaddr_in* addr);
@@ -39,6 +41,13 @@ void FromHostPort(const char* ip, uint16_t port, struct sockaddr_in* addr);
 struct sockaddr_in GetLocalAddr(int sockfd);
 
 int GetSocketError(int sockfd);
+
+class SocketInit {
+ public:
+  SocketInit() {
+    IgnoreSigPipe();
+  }
+};
 
 }  // namespace socket_utils
 }  // namespace muduo

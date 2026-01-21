@@ -30,7 +30,7 @@ class Socket : NonCopyable {
   // On error, -1 is returned, and *peeraddr is untouched.
   int Accept(InetAddress* peeraddr);
 
-  // void ShutdownWrite();
+  void ShutdownWrite();
 
   /// Enable/disable TCP_NODELAY (disable/enable Nagle's algorithm).
   /// void SetTcpNoDelay(bool on);

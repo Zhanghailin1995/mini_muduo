@@ -9,6 +9,7 @@
 #include <sys/socket.h>
 #include <unistd.h>
 #include <cerrno>
+#include <csignal>
 #include <cstdio>
 #include <cstring>
 
@@ -119,6 +120,12 @@ void socket_utils::Close(int sockfd) {
   }
 }
 
+void socket_utils::ShutdownWrite(int sockfd) {
+  if (::shutdown(sockfd, SHUT_WR) < 0) {
+    LOG_SYSERR << "socket_utils::ShutdownWrite";
+  }
+}
+
 void socket_utils::ToHostPort(char* buf, size_t size, const struct sockaddr_in& addr) {
   char host[INET_ADDRSTRLEN] = "INVALID";
   ::inet_ntop(AF_INET, &addr.sin_addr, host, sizeof host);
@@ -154,3 +161,7 @@ int socket_utils::GetSocketError(int sockfd) {
   }
   return optval;
 }
+
+namespace {
+socket_utils::SocketInit kSocketInit;
+}  // namespace
