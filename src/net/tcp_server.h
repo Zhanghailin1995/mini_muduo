@@ -23,6 +23,8 @@ class TcpServer : NonCopyable {
 
   void SetMessageCallback(const MessageCallback& cb) { message_callback_ = cb; }
 
+  void SetWriteCompleteCallback(const WriteCompleteCallback& cb) { write_complete_callback_ = cb; }
+
  private:
   void NewConnection(int sockfd, const InetAddress& peer_addr);
 
@@ -34,6 +36,7 @@ class TcpServer : NonCopyable {
   std::unique_ptr<Acceptor> acceptor_;
   ConnectionCallback connection_callback_;
   MessageCallback message_callback_;
+  WriteCompleteCallback write_complete_callback_;
 
   int next_conn_id_;
   using ConnectionMap = std::map<std::string, TcpConnectionPtr>;

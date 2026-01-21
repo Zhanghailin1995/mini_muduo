@@ -14,6 +14,7 @@ typedef std::function<void(const TcpConnectionPtr&)> ConnectionCallback;
 typedef std::function<void(const TcpConnectionPtr&, Buffer* buf, Timestamp receive_time)>
     MessageCallback;
 typedef std::function<void(const TcpConnectionPtr&)> CloseCallback;
+typedef std::function<void(const TcpConnectionPtr&)> WriteCompleteCallback;
 }  // namespace muduo
 
 #endif  // MUDUO_NET_CALLBACKS_H

@@ -5,6 +5,7 @@
 #include "src/net/epoller.h"
 #include "src/net/timer_queue.h"
 
+#include <signal.h>
 #include <sys/eventfd.h>
 
 using namespace muduo;  // NOLINT
@@ -19,6 +20,13 @@ static int CreateEventfd() {
   }
   return evtfd;
 }
+
+class IgnoreSigPipe {
+ public:
+  IgnoreSigPipe() { ::signal(SIGPIPE, SIG_IGN); }
+};
+
+IgnoreSigPipe initObj;
 
 EventLoop::EventLoop()
     : looping_(false),

@@ -25,11 +25,19 @@ class TcpConnection : NonCopyable, public std::enable_shared_from_this<TcpConnec
 
   void Write(const std::string& message);
 
+  void Write(const void* data, int len);
+
   void Shutdown();
+
+  void SetTcpNoDelay(bool on);
+
+  void SetKeepAlive(bool on);
 
   void SetConnectionCallback(const ConnectionCallback& cb) { connection_callback_ = cb; }
 
   void SetMessageCallback(const MessageCallback& cb) { message_callback_ = cb; }
+
+  void SetWriteCompleteCallback(const WriteCompleteCallback& cb) { write_complete_callback_ = cb; }
 
   void SetCloseCallback(const CloseCallback& cb) { close_callback_ = cb; }
 
@@ -50,7 +58,7 @@ class TcpConnection : NonCopyable, public std::enable_shared_from_this<TcpConnec
   void HandleWrite();
   void HandleClose();
   void HandleError();
-  void WriteInEventExecutor(const std::string message);
+  void WriteInEventExecutor(const void* data, int len);
   void ShutdownInEventExecutor();
 
   EventLoop* loop_;
@@ -64,6 +72,7 @@ class TcpConnection : NonCopyable, public std::enable_shared_from_this<TcpConnec
   Buffer output_buffer_;
   ConnectionCallback connection_callback_;
   MessageCallback message_callback_;
+  WriteCompleteCallback write_complete_callback_;
   CloseCallback close_callback_;
 };
 }  // namespace muduo

@@ -34,14 +34,21 @@ TcpConnection::~TcpConnection() {
 }
 
 void TcpConnection::Write(const std::string& message) {
+  Write(message.data(), static_cast<int>(message.size()));
+}
+
+void TcpConnection::Write(const void* data, int len) {
   if (loop_->IsInLoopThread()) {
-    WriteInEventExecutor(std::string(message));
+    WriteInEventExecutor(data, len);
   } else {
-    loop_->Execute(std::bind(&TcpConnection::WriteInEventExecutor, this, std::string(message)));
+    std::string message(static_cast<const char*>(data), len);
+    loop_->Execute([this, message]() {
+      WriteInEventExecutor(message.data(), static_cast<int>(message.size()));
+    });
   }
 }
 
-void TcpConnection::WriteInEventExecutor(const std::string message) {
+void TcpConnection::WriteInEventExecutor(const void* data, int len) {
   loop_->AssertInLoopThread();
   if (state_ == K_DISCONNECTED) {
     LOG_WARN << "TcpConnection::WriteInEventExecutor() - disconnected, give up writing";
@@ -50,11 +57,20 @@ void TcpConnection::WriteInEventExecutor(const std::string message) {
   ssize_t nwrote = 0;
   // if no data in output buffer, try writing directly
   if (!channel_->IsInterestedWriting() && output_buffer_.ReadableBytes() == 0) {
-    nwrote = ::write(channel_->Fd(), message.data(), message.size());
+    nwrote = ::write(channel_->Fd(), data, static_cast<size_t>(len));
     if (nwrote >= 0) {
-      if (implicit_cast<size_t>(nwrote) < message.size()) {
+      if (implicit_cast<size_t>(nwrote) < static_cast<size_t>(len)) {
         LOG_TRACE << "TcpConnection::WriteInEventExecutor() - partial write" << nwrote
-                  << " bytes written out of " << message.size();
+                  << " bytes written out of " << len;
+      } else {
+        // all data written in one shot
+        if (write_complete_callback_) {
+          loop_->Submit([this]() {
+            if (write_complete_callback_) {
+              write_complete_callback_(shared_from_this());
+            }
+          });
+        }
       }
     } else {
       nwrote = 0;
@@ -65,9 +81,10 @@ void TcpConnection::WriteInEventExecutor(const std::string message) {
   }
 
   assert(nwrote >= 0);
-  if (implicit_cast<size_t>(nwrote) < message.size()) {
+  if (implicit_cast<size_t>(nwrote) < static_cast<size_t>(len)) {
     // append remaining data to output buffer
-    output_buffer_.Append(message.data() + nwrote, message.size() - nwrote);
+    output_buffer_.Append(static_cast<const char*>(data) + nwrote,
+                          static_cast<size_t>(len - nwrote));
     if (!channel_->IsInterestedWriting()) {
       channel_->EnableWriting();
     }
@@ -80,6 +97,10 @@ void TcpConnection::Shutdown() {
     loop_->Execute(std::bind(&TcpConnection::ShutdownInEventExecutor, this));
   }
 }
+
+void TcpConnection::SetTcpNoDelay(bool on) { socket_->SetTcpNoDelay(on); }
+
+void TcpConnection::SetKeepAlive(bool on) { socket_->SetKeepAlive(on); }
 
 void TcpConnection::ShutdownInEventExecutor() {
   loop_->AssertInLoopThread();
@@ -125,7 +146,6 @@ void TcpConnection::HandleRead(Timestamp receive_time) {
 }
 
 void TcpConnection::HandleWrite() {
-  // TODO
   loop_->AssertInLoopThread();
   if (channel_->IsInterestedWriting()) {
     ssize_t n = ::write(channel_->Fd(), output_buffer_.Peek(),
@@ -135,6 +155,16 @@ void TcpConnection::HandleWrite() {
       if (output_buffer_.ReadableBytes() == 0) {
         // all data sent
         channel_->DisableWriting();
+        if (write_complete_callback_) {
+          loop_->Submit([this]() {
+            if (write_complete_callback_) {
+              write_complete_callback_(shared_from_this());
+            }
+          });
+        }
+        if (state_ == K_DISCONNECTING) {
+          ShutdownInEventExecutor();
+        }
       }
     } else {
       LOG_SYSERR << "TcpConnection::HandleWrite()";

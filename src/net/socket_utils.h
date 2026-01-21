@@ -42,13 +42,6 @@ struct sockaddr_in GetLocalAddr(int sockfd);
 
 int GetSocketError(int sockfd);
 
-class SocketInit {
- public:
-  SocketInit() {
-    IgnoreSigPipe();
-  }
-};
-
 }  // namespace socket_utils
 }  // namespace muduo
 #endif  // MUDUO_NET_SOCKET_UTILS_H

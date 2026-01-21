@@ -46,6 +46,8 @@ void TcpServer::NewConnection(int sockfd, const InetAddress& peer_addr) {
   conn->SetConnectionCallback(connection_callback_);
   // 这个message_callback_也是在TcpServer外部设置的，用于处理收到消息事件
   conn->SetMessageCallback(message_callback_);
+  // 这个write_complete_callback_也是在TcpServer外部设置的，用于处理写完成事件
+  conn->SetWriteCompleteCallback(write_complete_callback_);
   conn->SetCloseCallback(std::bind(&TcpServer::RemoveConnection, this, std::placeholders::_1));
   conn->ConnectionEstablished();
 }

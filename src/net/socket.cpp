@@ -34,4 +34,14 @@ void Socket::SetReuseAddr(bool on) {
   ::setsockopt(sockfd_, SOL_SOCKET, SO_REUSEADDR, &optval, static_cast<socklen_t>(sizeof(optval)));
 }
 
+void Socket::SetTcpNoDelay(bool on) {
+  int optval = on ? 1 : 0;
+  ::setsockopt(sockfd_, IPPROTO_TCP, TCP_NODELAY, &optval, static_cast<socklen_t>(sizeof(optval)));
+}
+
+void Socket::SetKeepAlive(bool on) {
+  int optval = on ? 1 : 0;
+  ::setsockopt(sockfd_, SOL_SOCKET, SO_KEEPALIVE, &optval, static_cast<socklen_t>(sizeof(optval)));
+}
+
 void Socket::ShutdownWrite() { socket_utils::ShutdownWrite(sockfd_); }

@@ -33,7 +33,7 @@ class Socket : NonCopyable {
   void ShutdownWrite();
 
   /// Enable/disable TCP_NODELAY (disable/enable Nagle's algorithm).
-  /// void SetTcpNoDelay(bool on);
+  void SetTcpNoDelay(bool on);
 
   /// Enable/disable SO_REUSEADDR
   void SetReuseAddr(bool on);
@@ -42,7 +42,7 @@ class Socket : NonCopyable {
   // void SetReusePort(bool on);
 
   /// Enable/disable SO_KEEPALIVE
-  // void SetKeepAlive(bool on);
+  void SetKeepAlive(bool on);
 
  private:
   const int sockfd_;

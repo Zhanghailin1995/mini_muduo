@@ -9,7 +9,6 @@
 #include <sys/socket.h>
 #include <unistd.h>
 #include <cerrno>
-#include <csignal>
 #include <cstdio>
 #include <cstring>
 
@@ -161,7 +160,3 @@ int socket_utils::GetSocketError(int sockfd) {
   }
   return optval;
 }
-
-namespace {
-socket_utils::SocketInit kSocketInit;
-}  // namespace
