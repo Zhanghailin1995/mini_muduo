@@ -4,6 +4,7 @@ set(net_SRCS
   channel.cpp
   event_loop.cpp
   event_loop_thread.cpp
+  event_loop_thread_pool.cpp
   epoller.cpp
   inet_address.cpp
   socket.cpp
@@ -24,6 +25,7 @@ set(HEADERS
   channel.h
   event_loop.h
   event_loop_thread.h
+  event_loop_thread_pool.h
   epoller.h
   inet_address.h
   socket.h

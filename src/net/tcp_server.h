@@ -11,6 +11,7 @@
 namespace muduo {
 class EventLoop;
 class Acceptor;
+class EventLoopThreadPool;
 
 class TcpServer : NonCopyable {
  public:
@@ -25,15 +26,20 @@ class TcpServer : NonCopyable {
 
   void SetWriteCompleteCallback(const WriteCompleteCallback& cb) { write_complete_callback_ = cb; }
 
+  void SetThreadCount(int num_threads);
+
  private:
   void NewConnection(int sockfd, const InetAddress& peer_addr);
 
   void RemoveConnection(const TcpConnectionPtr& conn);
 
+  void RemoveConnectionInEventExecutor(const TcpConnectionPtr& conn);
+
   EventLoop* loop_;
   const std::string name_;
   bool started_;
   std::unique_ptr<Acceptor> acceptor_;
+  std::unique_ptr<EventLoopThreadPool> thread_pool_;
   ConnectionCallback connection_callback_;
   MessageCallback message_callback_;
   WriteCompleteCallback write_complete_callback_;
