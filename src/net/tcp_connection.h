@@ -25,6 +25,8 @@ class TcpConnection : NonCopyable, public std::enable_shared_from_this<TcpConnec
 
   void Write(const std::string& message);
 
+  void Write(std::string&& message);
+
   void Write(const void* data, int len);
 
   void Shutdown();

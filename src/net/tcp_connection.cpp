@@ -37,13 +37,26 @@ void TcpConnection::Write(const std::string& message) {
   Write(message.data(), static_cast<int>(message.size()));
 }
 
+void TcpConnection::Write(std::string&& message) {
+  if (loop_->IsInLoopThread()) {
+    WriteInEventExecutor(message.data(), static_cast<int>(message.size()));
+  } else {
+    // Use shared_ptr to avoid extra copy in C++11
+    auto msg_ptr = std::make_shared<std::string>(std::move(message));
+    loop_->Execute([this, msg_ptr]() {
+      WriteInEventExecutor(msg_ptr->data(), static_cast<int>(msg_ptr->size()));
+    });
+  }
+}
+
 void TcpConnection::Write(const void* data, int len) {
   if (loop_->IsInLoopThread()) {
     WriteInEventExecutor(data, len);
   } else {
-    std::string message(static_cast<const char*>(data), len);
-    loop_->Execute([this, message]() {
-      WriteInEventExecutor(message.data(), static_cast<int>(message.size()));
+    // Use shared_ptr to avoid extra copy in C++11
+    auto msg_ptr = std::make_shared<std::string>(static_cast<const char*>(data), len);
+    loop_->Execute([this, msg_ptr]() {
+      WriteInEventExecutor(msg_ptr->data(), static_cast<int>(msg_ptr->size()));
     });
   }
 }
@@ -65,11 +78,7 @@ void TcpConnection::WriteInEventExecutor(const void* data, int len) {
       } else {
         // all data written in one shot
         if (write_complete_callback_) {
-          loop_->Submit([this]() {
-            if (write_complete_callback_) {
-              write_complete_callback_(shared_from_this());
-            }
-          });
+          write_complete_callback_(shared_from_this());
         }
       }
     } else {
@@ -156,11 +165,7 @@ void TcpConnection::HandleWrite() {
         // all data sent
         channel_->DisableWriting();
         if (write_complete_callback_) {
-          loop_->Submit([this]() {
-            if (write_complete_callback_) {
-              write_complete_callback_(shared_from_this());
-            }
-          });
+          write_complete_callback_(shared_from_this());
         }
         if (state_ == K_DISCONNECTING) {
           ShutdownInEventExecutor();
